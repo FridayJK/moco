@@ -20,6 +20,7 @@ class ImageFolderInstance(datasets.ImageFolder):
             tuple: (image, target, index) where target is class_index of the target class.
         """
         path, target = self.imgs[index]
+        # print(index, path)
         image = self.loader(path)
         if self.transform is not None:
             img = self.transform(image)

@@ -186,8 +186,15 @@ def resnet18(pretrained=False, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
+    model_state_dict = model.state_dict()
+    unmatched_layers = ['fc.weight', 'fc.bias']
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
+        param = model_zoo.load_url(model_urls['resnet18'])
+        for name, parm in param.items():
+            if name in unmatched_layers:
+                continue
+            model_state_dict[name].copy_(parm)
+        # model.load_state_dict(param)
     return model
 
 

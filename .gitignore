@@ -9,7 +9,9 @@ ckpts/
 tmp*.py
 # run*.sh
 *.pdf
-
+events*
+config.json
+log.txt*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

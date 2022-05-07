@@ -21,7 +21,7 @@ from torchvision import transforms
 from moco.NCE import MemoryMoCo, NCESoftmaxLoss
 from moco.dataset import ImageFolderInstance
 from moco.logger import setup_logger
-from moco.models.resnet import resnet50
+from moco.models.resnet import resnet50, resnet18
 from moco.util import AverageMeter, MyHelpFormatter, DistributedShufle, set_bn_train, moment_update
 from moco.lr_scheduler import get_scheduler
 
@@ -37,14 +37,14 @@ def parse_option():
 
     # dataset
     # parser.add_argument('--data-dir', type=str, required=True, help='root director of dataset')
-    parser.add_argument('--data-dir', type=str, default="/workspace/mnt/storage/zhangjunkang/zjk2/data/imagenet/ImageNet-pytorch", help='root director of dataset')
-    parser.add_argument('--dataset', type=str, default='imagenet', choices=['imagenet100', 'imagenet'],
+    parser.add_argument('--data-dir', type=str, default="/workspace/mnt/storage/zhangjunkang/zjk2/data", help='root director of dataset')
+    parser.add_argument('--dataset', type=str, default='highway_s', choices=['imagenet100', 'imagenet', 'highway_s', 'highway_b', 'highway_ori'],
                         help='dataset to training')
     parser.add_argument('--crop', type=float, default=0.08, help='minimum crop')
     parser.add_argument('--aug', type=str, default='CJ', choices=['NULL', 'CJ'],
                         help="augmentation type: NULL for normal supervised aug, CJ for aug with ColorJitter")
     parser.add_argument('--batch-size', type=int, default=128, help='batch_size')
-    parser.add_argument('--num-workers', type=int, default=4, help='num of workers to use')
+    parser.add_argument('--num-workers', type=int, default=8, help='num of workers to use')
 
     # model and loss function
     parser.add_argument('--model', type=str, default='resnet18', choices=['resnet50', 'resnet18'], help="backbone model")
@@ -92,9 +92,13 @@ def parse_option():
 
 def get_loader(args):
     # set the data loader
-    train_folder = os.path.join(args.data_dir, 'train')
+    # train_folder = os.path.join(args.data_dir, 'train')
+    # train_folder = os.path.join(args.data_dir, 'ballhead_camera_data_s')
+    # train_folder = os.path.join(args.data_dir, 'ballhead_camera_data')
+    train_folder = os.path.join(args.data_dir, 'ballCamera_roate_data_s')
 
     image_size = 224
+    # image_size = [224, 448]
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     if args.aug == 'NULL':
@@ -127,8 +131,14 @@ def get_loader(args):
 
 
 def build_model(args):
-    model = resnet50(width=args.model_width).cuda()
-    model_ema = resnet50(width=args.model_width).cuda()
+    if(args.model=='resnet50'):
+        model = resnet50(width=args.model_width).cuda()
+        model_ema = resnet50(width=args.model_width).cuda()
+    elif(args.model=='resnet18'):
+        model = resnet18(pretrained=True, width=args.model_width).cuda()
+        model_ema = resnet18(pretrained=True, width=args.model_width).cuda()
+    else:
+        print("Not Support Yet!")
 
     # copy weights from `model' to `model_ema'
     moment_update(model, model_ema, 0)
